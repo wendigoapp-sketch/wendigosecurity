@@ -68,13 +68,35 @@
 .wg-select-wrap { position: relative; }
 .wg-condo-btn { display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background 150ms ease, border-color 150ms ease; }
 .wg-condo-btn:hover { background: var(--secondary); border-color: var(--muted-foreground); }
-.wg-menu { position: absolute; top: calc(100% + 6px); right: 0; min-width: 280px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 6px; z-index: 50; box-shadow: 0 16px 40px rgba(0,0,0,0.45); animation: wg-pop 150ms ease; }
-.wg-menu.is-left { left: 0; right: auto; }
+
+/* Menú desplegable centrado y controlado */
+.wg-menu { 
+  position: absolute; 
+  top: calc(100% + 6px); 
+  left: 50%; 
+  transform: translateX(-50%); 
+  min-width: 280px; 
+  max-width: calc(100vw - 32px); /* <-- NUNCA más ancho que la pantalla */
+  background: var(--card); 
+  border: 1px solid var(--border); 
+  border-radius: 10px; 
+  padding: 6px; 
+  z-index: 50; 
+  box-shadow: 0 16px 40px rgba(0,0,0,0.45); 
+  animation: wg-pop 150ms ease; 
+}
+
+/* Forzamos que si es 'is-left' también se centre */
+.wg-menu.is-left { 
+  left: 50%; 
+  right: auto; 
+  transform: translateX(-50%); 
+}
+
 .wg-menu-item { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; border: 0; background: transparent; color: var(--foreground); font-size: 13px; cursor: pointer; text-align: left; font-family: inherit; }
 .wg-menu-item:hover { background: var(--secondary); }
 .wg-menu-item.is-selected { background: color-mix(in srgb, var(--primary) 10%, transparent); }
 .wg-menu-sub { font-size: 11.5px; color: var(--muted-foreground); }
-
 /* ---------- Page header ---------- */
 .wg-page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin: 6px 0 18px; flex-wrap: wrap; }
 .wg-page-title { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
