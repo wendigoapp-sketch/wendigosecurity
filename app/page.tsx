@@ -5,21 +5,27 @@ export default function Home() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', fontFamily: 'var(--font-sans)' }}>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ padding: '12px', backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px' }}>
+      {/* HEADER LOGO Y TITULO */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px', marginBottom: '20px', width: '100%' }}>
+        <div style={{ padding: '12px', backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '16px', flexShrink: 0 }}>
           <ShieldCheck size={42} style={{ color: 'var(--primary)' }} />
         </div>
-        <div>
-          <h1 style={{ fontSize: '36px', fontWeight: 700, color: 'var(--foreground)', margin: 0 }}>WendigoSecurity</h1>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '16px', margin: 0 }}>Centro de control inteligente para condominios</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+          {/* clamp achica el texto en celus y lo agranda en PC */}
+          <h1 style={{ fontSize: 'clamp(24px, 6vw, 36px)', fontWeight: 700, color: 'var(--foreground)', margin: 0, lineHeight: 1.1 }}>
+            WendigoSecurity
+          </h1>
+          <p style={{ color: 'var(--muted-foreground)', fontSize: 'clamp(13px, 3vw, 16px)', marginTop: '6px', textAlign: 'center', maxWidth: '400px' }}>
+            Centro de control inteligente para condominios
+          </p>
         </div>
       </div>
       
-      <div style={{ width: '100%', maxWidth: '900px', height: '1px', backgroundColor: 'var(--border)', margin: '30px 0' }} />
+      <div style={{ width: '100%', maxWidth: '900px', height: '1px', backgroundColor: 'var(--border)', margin: '20px 0' }} />
 
-      <h2 style={{ fontSize: '24px', fontWeight: 500, marginBottom: '30px', color: 'var(--foreground)' }}>Seleccioná tu tipo de acceso</h2>
+      <h2 style={{ fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: 500, marginBottom: '30px', color: 'var(--foreground)', textAlign: 'center' }}>Seleccioná tu tipo de acceso</h2>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', width: '100%', maxWidth: '900px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', width: '100%', maxWidth: '900px' }}>
         
         {/* Admin */}
         <Link href="/panel-administrador" style={{ textDecoration: 'none' }}>
@@ -59,7 +65,7 @@ export default function Home() {
 
       </div>
 
-      <p style={{ marginTop: '60px', color: 'var(--muted-foreground)', fontSize: '14px' }}>
+      <p style={{ marginTop: '60px', color: 'var(--muted-foreground)', fontSize: '14px', textAlign: 'center' }}>
         © 2026 WendigoSecurity. Todos los derechos reservados.
       </p>
     </div>
