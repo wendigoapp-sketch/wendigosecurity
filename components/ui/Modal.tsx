@@ -23,7 +23,17 @@ export function Modal({ abierto, onCerrar, titulo, descripcion, ancho, children,
   if (!abierto) return null;
   return (
     <div className="wg-overlay is-center" onClick={onCerrar} role="presentation">
-      <div className={`wg-modal ${ancho ? 'is-wide' : ''}`} role="dialog" aria-modal="true" aria-label={titulo} onClick={(e) => e.stopPropagation()}>
+      <div 
+        className={`wg-modal ${ancho ? 'is-wide' : ''}`} 
+        role="dialog" 
+        aria-modal="true" 
+        aria-label={titulo} 
+        onClick={(e) => e.stopPropagation()}
+        style={{ 
+          maxWidth: 'calc(100vw - 32px)', // <-- El arreglo: nunca más ancho que la pantalla
+          width: '100%' 
+        }}
+      >
         <div className="wg-modal-head">
           <div>
             <div className="wg-modal-title">{titulo}</div>
