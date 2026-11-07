@@ -199,8 +199,8 @@
 .wg-kv dd { margin: 0; font-weight: 500; word-break: break-word; }
 .wg-section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-foreground); margin: 20px 0 10px; }
 
-.wg-modal { width: min(560px, 100%); background: var(--card); border: 1px solid var(--border); border-radius: 14px; max-height: 92vh; display: flex; flex-direction: column; animation: wg-pop 180ms ease; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
-.wg-modal.is-wide { width: min(760px, 100%); }
+.wg-modal { width: calc(100% - 32px); max-width: 560px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; max-height: 92vh; display: flex; flex-direction: column; animation: wg-pop 180ms ease; box-shadow: 0 24px 60px rgba(0,0,0,0.55); }
+.wg-modal.is-wide { width: calc(100% - 32px); max-width: 760px; }
 .wg-modal-head { padding: 20px 22px 6px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .wg-modal-title { font-size: 17px; font-weight: 600; }
 .wg-modal-desc { font-size: 13px; color: var(--muted-foreground); margin-top: 4px; line-height: 1.5; }
