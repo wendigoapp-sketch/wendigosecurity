@@ -1,21 +1,16 @@
 {
-  "name": "WendigoSecurity — Control de accesos",
+  "name": "WendigoSecurity",
   "short_name": "Wendigo",
   "description": "Centro de control y seguridad para condominios",
   "start_url": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#22c55e",
   "icons": [
     {
       "src": "/favicon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon.png",
-      "sizes": "512x512",
+      "sizes": "1254x1254",
       "type": "image/png",
       "purpose": "any"
     }
