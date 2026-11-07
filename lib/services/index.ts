@@ -188,14 +188,24 @@ export const servicios = {
     // --- PUESTOS ---
   async puestos(c: string): Promise<Puesto[]> {
     const supabase = createClient();
+    
+    // 1. Traemos todos los puestos del condominio
     const { data } = await supabase.from('puestos').select('*').eq('condominio_id', c);
+    
+    // 2. Contamos cuántos guardias están realmente EN TURNO ahora mismo
+    const { count: guardiasEnTurno } = await supabase
+      .from('guardias')
+      .select('*', { count: 'exact', head: true })
+      .eq('condominio_id', c)
+      .eq('en_turno', true);
+
     return (data || []).map(p => ({ 
       id: p.id, 
       condominioId: p.condominio_id, 
       nombre: p.nombre, 
       tipo: p.descripcion || 'Portería', 
-      requeridos: 2, 
-      cubiertos: 1,
+      requeridos: 1, // Asumimos que cada puesto necesita 1 guardia
+      cubiertos: guardiasEnTurno || 0, // <-- Ahora es dinámico
       foto_guardia_actual: p.foto_guardia_actual || null,
       nombre_guardia_actual: p.nombre_guardia_actual || null,
       hora_relevo: p.hora_relevo || null

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, AlertOctagon, ArrowDownToLine, ArrowUpFromLine, Camera, CarFront, ClipboardList, ShieldAlert, ShieldCheck, Users } from 'lucide-react';
 import { MetricCard } from '../ui/MetricCard';
 import { Badge } from '../ui/Badge';
-import { Modal } from '../ui/Modal'; // <-- AGREGADO
+import { Modal } from '../ui/Modal';
 import { GraficoMovimientos, GraficoCobertura, GraficoCategorias, GraficoRespuesta } from './Graficos';
 import { servicios } from '../../lib/services';
 import { useServicio } from '../../lib/hooks/useServicio';
@@ -40,17 +40,15 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
   );
 
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
-  const [fotoSeleccionada, setFotoSeleccionada] = useState<Puesto | null>(null); // <-- NUEVO ESTADO
+  const [fotoSeleccionada, setFotoSeleccionada] = useState<Puesto | null>(null);
 
   const puestosConFoto = datos.puestos.filter(p => p.foto_guardia_actual);
 
   useEffect(() => {
     if (puestosConFoto.length <= 1) return;
-
     const intervalo = setInterval(() => {
       setIndiceCarrusel((prev) => (prev + 1) % puestosConFoto.length);
     }, 5000);
-
     return () => clearInterval(intervalo);
   }, [puestosConFoto.length]);
 
@@ -58,8 +56,11 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
   if (cargando) return (<><PageHeader titulo="Resumen operativo" descripcion="Cargando estado del condominio…" /><SkeletonBento /></>);
 
   const activas = datos.panicos.filter((p) => p.estado === 'Activa');
+  
+  // 🔥 ARREGLO DE LA RUEDA: Requeridos son los puestos, Cubiertos son los que tienen guardia asignado
   const requeridos = datos.puestos.length;
-  const cubiertos = datos.turnos.length;
+  const cubiertos = datos.puestos.filter(p => p.nombre_guardia_actual || p.foto_guardia_actual).length;
+
   const dentro = datos.visitas.filter((v) => v.estado === 'En el condominio').length;
   const abiertas = datos.incidencias.filter((i) => i.estado === 'Abierta' || i.estado === 'En revisión');
   const criticas = abiertas.filter((i) => i.severidad === 'Crítica' || i.severidad === 'Alta').length;
@@ -81,10 +82,7 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
   }));
 
   const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  const datosRespuesta = diasSemana.map(dia => ({
-    dia,
-    segundos: 0
-  }));
+  const datosRespuesta = diasSemana.map(dia => ({ dia, segundos: 0 }));
 
   const puestoActual = puestosConFoto[indiceCarrusel % (puestosConFoto.length || 1)];
 
@@ -124,7 +122,7 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
           valor={`${cubiertos}/${requeridos}`}
           icono={ShieldCheck}
           tono={cubiertos < requeridos ? 'aviso' : 'ok'}
-          pista={cubiertos < requeridos ? <span>Faltan turnos por asignar</span> : <span>Dotación completa</span>}
+          pista={cubiertos < requeridos ? <span>Faltan guardias por relevar</span> : <span>Dotación completa</span>}
           extra={<div className={`wg-bar ${cubiertos < requeridos ? 't-warn' : ''}`} style={{ marginTop: 12 }}><i style={{ width: `${requeridos ? (cubiertos / requeridos) * 100 : 0}%` }} /></div>}
         />
         <MetricCard
@@ -148,7 +146,6 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
           pista={<span>{qrHoy - qrUsados} aún sin utilizar</span>}
         />
         
-        {/* TARJETA DE GUARDIAS EN TURNO (CARRUSEL CON CLICK) */}
         <div 
           className="wg-card" 
           style={{ overflow: 'hidden', cursor: 'pointer' }}
@@ -177,7 +174,6 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
           )}
         </div>
 
-        {/* TARJETA DE VEHICULOS (PARA COMPLETAR EL BENTO) */}
         <MetricCard
           etiqueta="Vehículos autorizados dentro"
           valor={datos.movimientos.filter((m) => m.patente && m.tipo === 'Entrada').length}
@@ -200,11 +196,15 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
         <div className="wg-card">
           <div className="wg-card-head"><span className="wg-card-title"><b>Cobertura de puestos</b></span></div>
           <GraficoCobertura cubiertos={cubiertos} requeridos={requeridos} />
-          <div style={{ marginTop: 6 }}>
+          
+          {/* 🔥 CARRUSEL DE PUESTOS */}
+          <div style={{ marginTop: 12, display: 'flex', overflowX: 'auto', gap: 8, paddingBottom: 8 }}>
             {datos.puestos.map((p) => (
-              <div key={`cob-${p.id}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 0', fontSize: 13, borderBottom: '1px solid var(--border)' }}>
-                <span>{p.nombre}</span>
-                <Badge texto={`${p.cubiertos}/${p.requeridos}`} tono={p.cubiertos < p.requeridos ? 'warn' : 'ok'} punto={false} />
+              <div key={`cob-${p.id}`} style={{ minWidth: 100, padding: '8px 12px', background: 'var(--secondary)', borderRadius: 8, textAlign: 'center', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: 12, color: 'var(--muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.nombre}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4, color: p.nombre_guardia_actual ? 'var(--success)' : 'var(--muted-foreground)' }}>
+                  {p.nombre_guardia_actual ? '1/1' : '0/1'}
+                </div>
               </div>
             ))}
           </div>
@@ -265,7 +265,6 @@ export function ModuloResumen({ condominioId, onModulo }: { condominioId: string
         </div>
       ) : null}
 
-      {/* MODAL DE FOTO GRANDE */}
       <Modal
         abierto={fotoSeleccionada !== null}
         onCerrar={() => setFotoSeleccionada(null)}
