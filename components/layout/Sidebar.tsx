@@ -60,7 +60,7 @@ export function Sidebar({ grupos, moduloActivo, onModulo, colapsado, movilAbiert
         <div className="wg-avatar">{iniciales}</div>
         <div className="wg-user-meta">
           <div className="wg-user-name">{usuario.nombre}</div>
-          <div className="wg-user-role">{usuario.rol} · perfil demo</div>
+          <div className="wg-user-role">{usuario.rol}</div>
         </div>
       </div>
     </aside>

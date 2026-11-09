@@ -29,8 +29,12 @@ export function ResVisitas({ condominioId, modo, onAutorizar, onHistorial }: Pro
   
   // Filtros corregidos (sin duplicados)
   const previstas = v.datos.filter((x) => x.estado === 'Autorizada' || x.estado === 'Programada' || x.estado === 'En el condominio');
-   const historial = v.datos.filter((x: any) => x.estado === 'Finalizada' || x.estado === 'Vencida' || x.estado === 'Rechazada' || x.estado === 'Cancelada');
-  const lista = modo === 'previstas' ? previstas : historial;
+const historial = v.datos.filter((x) =>
+  x.estado === 'Finalizada' ||
+  x.estado === 'Vencida' ||
+  x.estado === 'Rechazada' ||
+  x.estado === 'Cancelada'
+);  const lista = modo === 'previstas' ? previstas : historial;
 
   return (
     <div>

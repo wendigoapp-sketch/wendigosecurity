@@ -72,7 +72,7 @@ export function ResInfo({ condominioId }: { condominioId: string }) {
           <div className="wg-feed-icon"><MapPin size={17} /></div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <b style={{ fontSize: 14 }}>{x.nombre}</b>
-            <div className="wg-cell-sub">{(x as any).descripcion || 'Sin descripción'}</div>
+         <div className="wg-cell-sub">{(x as LugarCondominio & { descripcion?: string }).descripcion || 'Sin descripción'}</div>
           </div>
         </div>
       ))}

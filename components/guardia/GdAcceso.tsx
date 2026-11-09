@@ -2,7 +2,6 @@
 import React, { useMemo, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Ban, CheckCircle2, ScanLine, Search, XCircle, Camera } from 'lucide-react';
 import { Badge } from '../ui/Badge';
-import { QRCode } from '../ui/QRCode';
 import { EmptyState } from '../ui/EmptyState';
 import { SkeletonLista } from '../ui/LoadingSkeleton';
 import { ErrorState } from '../ui/ErrorState';
@@ -10,7 +9,7 @@ import { Modal } from '../ui/Modal';
 import { useToasts } from '../ui/Toasts';
 import { servicios } from '../../lib/services';
 import { useServicio } from '../../lib/hooks/useServicio';
-import type { AutorizacionQR, Movimiento, Visita } from '../../lib/types';
+import type { AutorizacionQR, Movimiento, Visita, Guardia, Puesto } from '../../lib/types';
 import dynamic from 'next/dynamic';
 
 const BarcodeScanner = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
@@ -43,22 +42,21 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
 
   const [relevoAbierto, setRelevoAbierto] = useState(false);
   const [fotoRelevo, setFotoRelevo] = useState<File | null>(null);
-  const [guardiaNombre, setGuardiaNombre] = useState('');
   const [guardiaLlegandoId, setGuardiaLlegandoId] = useState('');
   const [puestoSeleccionado, setPuestoSeleccionado] = useState('');
   const [subiendo, setSubiendo] = useState(false);
 
-  const puestos = useServicio(() => servicios.puestos(condominioId), [], [condominioId]);
-  const guardiasLista = useServicio(() => servicios.guardias(condominioId), [], [condominioId]);
+  const puestos = useServicio<Puesto[]>(() => servicios.puestos(condominioId), [], [condominioId]);
+  const guardiasLista = useServicio<Guardia[]>(() => servicios.guardias(condominioId), [], [condominioId]);
 
   // Identificamos el puesto asignado al guardia que inició sesión.
   const guardiaActual = guardiasLista.datos.find(
-    (g: any) => g.id === guardiaId
-  ) as any;
+    (g) => g.id === guardiaId
+  );
 
   // Solo permitimos compañeros que tengan asignado el mismo puesto.
   const companerosDisponibles = guardiasLista.datos.filter(
-    (g: any) =>
+    (g) =>
       g.id !== guardiaId &&
       g.puestoId === puestoSeleccionado
   );
@@ -97,8 +95,8 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
 
     // Verificamos que el guardia actual y el compañero pertenezcan al mismo puesto.
     const guardiaLlegando = guardiasLista.datos.find(
-      (g: any) => g.id === guardiaLlegandoId
-    ) as any;
+      (g) => g.id === guardiaLlegandoId
+    );
 
     if (
       !guardiaActual?.puestoId ||
@@ -132,14 +130,13 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
 
       setRelevoAbierto(false);
       setFotoRelevo(null);
-      setGuardiaNombre('');
       setGuardiaLlegandoId('');
       setPuestoSeleccionado('');
 
-    } catch (e: any) {
+    } catch (e: unknown) {
       notificar({
         titulo: 'Error',
-        detalle: e.message,
+        detalle: e instanceof Error ? e.message : 'No se pudo registrar el relevo.',
         tipo: 'bad'
       });
     } finally {
@@ -317,7 +314,7 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
         </div>
 
         <p className="wg-help" style={{ textAlign: 'center', marginTop: 12 }}>
-          Si la cámara no funciona, usá el botón "Buscar" para encontrar la visita manualmente.
+          Si la cámara no funciona, usá el botón &quot;Buscar&quot; para encontrar la visita manualmente.
         </p>
       </Modal>
 
@@ -335,13 +332,12 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
             onChange={(e) => {
               setPuestoSeleccionado(e.target.value);
               setGuardiaLlegandoId('');
-              setGuardiaNombre('');
             }}
           >
             <option value="">Seleccioná tu puesto…</option>
             {puestos.datos
-              .filter((p: any) => p.id === guardiaActual?.puestoId)
-              .map((p: any) => (
+              .filter((p) => p.id === guardiaActual?.puestoId)
+              .map((p) => (
                 <option key={p.id} value={p.id}>{p.nombre}</option>
               ))}
           </select>
@@ -352,13 +348,11 @@ export function GdAcceso({ condominioId, guardiaId }: { condominioId: string, gu
             onChange={(e) => {
               const id = e.target.value;
               setGuardiaLlegandoId(id);
-              const g = guardiasLista.datos.find((x: any) => x.id === id);
-              setGuardiaNombre(g?.nombre || '');
             }}
             disabled={!puestoSeleccionado}
           >
             <option value="">Seleccioná al compañero que llega…</option>
-            {companerosDisponibles.map((g: any) => (
+            {companerosDisponibles.map((g) => (
               <option key={g.id} value={g.id}>{g.nombre}</option>
             ))}
           </select>

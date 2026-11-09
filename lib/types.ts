@@ -42,16 +42,18 @@ export interface ResidenteUnidad {
 export interface Guardia {
   id: string;
   condominioId: string;
+  usuarioId: string;
   nombre: string;
+  email: string;
   rut: string;
   telefono: string;
   puesto: string;
+  puestoId?: string;
   turnoActual: 'Diurno' | 'Nocturno' | 'Libre';
   estado: 'En turno' | 'Fuera de turno' | 'Licencia';
   ultimaActividad: string;
   credencialVence: string;
 }
-
 export interface Puesto {
   id: string;
   condominioId: string;
@@ -65,7 +67,13 @@ export interface Puesto {
 }
 
 export type EstadoVisita =
-  | 'Programada' | 'Autorizada' | 'En el condominio' | 'Finalizada' | 'Vencida' | 'Rechazada';
+  | 'Programada'
+  | 'Autorizada'
+  | 'En el condominio'
+  | 'Finalizada'
+  | 'Vencida'
+  | 'Rechazada'
+  | 'Cancelada';
 
 export interface Visita {
   id: string;

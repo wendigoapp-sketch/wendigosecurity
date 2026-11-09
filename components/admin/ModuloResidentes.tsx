@@ -52,30 +52,30 @@ export function ModuloResidentes({ condominioId }: { condominioId: string }) {
     { clave: 'estado', titulo: 'Estado', render: (u) => <Badge texto={u.estado} /> },
   ];
 
-  // FUNCIÓN REAL PARA GUARDAR RESIDENTE
-  const guardarRes = formRes.handleSubmit(async (data) => {
-    setGuardando(true);
-    try {
-      await servicios.crearResidente({
-        condominioId, 
-        unidadId: data.unidadId, 
-        nombre: data.nombre,
-        email: data.email, 
-        telefono: data.telefono, 
-        relacion: data.relacion, 
-        rut: data.rut
-      });
-      setNuevoRes(false);
-      formRes.reset();
-      demo('¡Residente registrado en Supabase!');
-      window.location.reload();
-    } catch (e: any) {
-      demo('Error al registrar residente');
-      console.error(e);
-    } finally {
-      setGuardando(false);
-    }
-  });
+ // FUNCIÓN REAL PARA GUARDAR RESIDENTE
+const guardarRes = formRes.handleSubmit(async (data) => {
+  setGuardando(true);
+  try {
+    await servicios.crearResidente({
+      condominioId,
+      unidadId: data.unidadId,
+      nombre: data.nombre,
+      email: data.email,
+      telefono: data.telefono,
+      relacion: data.relacion,
+      rut: data.rut
+    });
+    setNuevoRes(false);
+    formRes.reset();
+    demo('¡Residente registrado en Supabase!');
+    window.location.reload();
+  } catch (e: unknown) {
+    demo('Error al registrar residente');
+    console.error(e);
+  } finally {
+    setGuardando(false);
+  }
+});
 
   const guardarUni = formUni.handleSubmit(async (data) => {
     setGuardando(true);

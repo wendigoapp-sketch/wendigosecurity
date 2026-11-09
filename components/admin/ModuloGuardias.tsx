@@ -40,27 +40,27 @@ export function ModuloGuardias({ condominioId }: { condominioId: string }) {
     { clave: 'credencial', titulo: 'Credencial OS-10 vence', ordenable: true, valor: (x) => x.credencialVence.split('/').reverse().join('-'), render: (x) => <span className="wg-mono">{x.credencialVence}</span> },
   ];
 
-  const guardar = handleSubmit(async (data) => {
-    setGuardando(true);
-    try {
-      await servicios.crearGuardia({
-        condominioId: condominioId,
-        nombre: data.nombre,
-        email: data.email,
-        telefono: data.telefono,
-        codigoInterno: data.codigoInterno
-      });
-      setNuevo(false);
-      reset();
-      demo('¡Guardia registrado en Supabase!');
-      g.recargar(); // <-- REFRESCA LA TABLA AL INSTANTE
-    } catch (e: any) {
-      demo('Error al registrar guardia');
-      console.error(e);
-    } finally {
-      setGuardando(false);
-    }
-  });
+ const guardar = handleSubmit(async (data) => {
+  setGuardando(true);
+  try {
+    await servicios.crearGuardia({
+      condominioId: condominioId,
+      nombre: data.nombre,
+      email: data.email,
+      telefono: data.telefono,
+      codigoInterno: data.codigoInterno
+    });
+    setNuevo(false);
+    reset();
+    demo('¡Guardia registrado en Supabase!');
+    g.recargar();
+  } catch (e: unknown) {
+    demo('Error al registrar guardia');
+    console.error(e);
+  } finally {
+    setGuardando(false);
+  }
+});
 
   if (g.error) return <ErrorState mensaje={g.error} onReintentar={g.recargar} />;
 
@@ -137,7 +137,7 @@ export function ModuloGuardias({ condominioId }: { condominioId: string }) {
         onConfirmar={async () => {
           if (!baja) return;
           try {
-            await servicios.eliminarGuardia(baja.id, (baja as any).usuarioId, condominioId);
+await servicios.eliminarGuardia(baja.id, baja.usuarioId, condominioId);
             demo('Guardia desvinculado del condominio');
             setBaja(null);
             g.recargar(); // <-- REFRESCA LA TABLA AL INSTANTE

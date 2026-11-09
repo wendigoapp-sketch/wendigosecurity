@@ -29,31 +29,31 @@ export function ResAutorizar({ condominioId, unidad, onTerminar }: { condominioI
     if (ok) setPaso((p) => p + 1);
   };
 
-  const emitir = handleSubmit(async (datos) => {
-    setGenerando(true);
-    try {
-      const fechaHora = new Date(`${datos.fecha}T${datos.desde}:00`).toISOString();
-      const sufijo = datos.rut.replace(/\D/g, '').slice(-6).padStart(6, '0');
-      const nuevoCodigo = `QR-${sufijo}`;
+ const emitir = handleSubmit(async (datos) => {
+  setGenerando(true);
+  try {
+    const fechaHora = new Date(`${datos.fecha}T${datos.desde}:00`).toISOString();
+    const sufijo = datos.rut.replace(/\D/g, '').slice(-6).padStart(6, '0');
+    const nuevoCodigo = `QR-${sufijo}`;
 
-      await servicios.crearVisita({
-        condominioId,
-        titulo: `${datos.nombre} (${datos.motivo})`,
-        fecha: fechaHora,
-        qrCodigo: nuevoCodigo
-      });
+    await servicios.crearVisita({
+      condominioId,
+      titulo: `${datos.nombre} (${datos.motivo})`,
+      fecha: fechaHora,
+      qrCodigo: nuevoCodigo
+    });
 
-      setCodigo(nuevoCodigo);
-      setPaso(4);
-      notificar({ titulo: '¡Visita Autorizada!', detalle: 'El guardia ya la puede ver en su panel.', tipo: 'ok' });
-    } catch (e: any) {
-      console.error("ERROR AL GUARDAR:", e);
-      notificar({ titulo: 'Error al guardar', detalle: e.message || 'Revisa la consola (F12)', tipo: 'bad' });
-    } finally {
-      setGenerando(false);
-    }
-  });
-
+    setCodigo(nuevoCodigo);
+    setPaso(4);
+    notificar({ titulo: '¡Visita Autorizada!', detalle: 'El guardia ya la puede ver en su panel.', tipo: 'ok' });
+  } catch (e: unknown) {
+    console.error("ERROR AL GUARDAR:", e);
+    const mensaje = e instanceof Error ? e.message : 'Revisa la consola (F12)';
+    notificar({ titulo: 'Error al guardar', detalle: mensaje, tipo: 'bad' });
+  } finally {
+    setGenerando(false);
+  }
+});
   const valores = getValues();
 
   return (

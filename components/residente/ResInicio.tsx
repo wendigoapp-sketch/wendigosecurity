@@ -1,5 +1,6 @@
+
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Building2, CarFront, History, MessageSquare, QrCode, ShieldAlert, UserPlus } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { QRCode } from '../ui/QRCode';
@@ -9,16 +10,40 @@ import { ConfirmModal } from '../ui/Modal';
 import { useToasts } from '../ui/Toasts';
 import { servicios } from '../../lib/services';
 import { useServicio } from '../../lib/hooks/useServicio';
+import { createClient } from '../../lib/config/supabase';
 import type { Visita } from '../../lib/types';
 
 export function ResInicio({ condominioId, unidad, ir }: { condominioId: string; unidad: string; ir: (vista: string) => void }) {
   const { demo } = useToasts();
   const v = useServicio<Visita[]>(() => servicios.visitas(condominioId), [], [condominioId]);
   const [panico, setPanico] = useState(false);
+  const [nombreResidente, setNombreResidente] = useState('');
+
+  useEffect(() => {
+    const cargarNombre = async () => {
+      const supabase = createClient();
+
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('perfiles')
+        .select('nombre_completo')
+        .eq('id', user.id)
+        .single();
+
+      if (data?.nombre_completo) {
+        setNombreResidente(data.nombre_completo);
+      }
+    };
+
+    cargarNombre();
+  }, []);
 
   if (v.error) return <ErrorState mensaje={v.error} onReintentar={v.recargar} />;
   
-  // Traemos TODAS las visitas del condominio (para el residente, son las suyas)
+  // Traemos las visitas del condominio
   const mias = v.datos;
   const proximas = mias.filter((x) => x.estado === 'Autorizada' || x.estado === 'Programada' || x.estado === 'En el condominio');
   const siguiente = proximas.find((x) => x.qrCodigo);
@@ -26,7 +51,9 @@ export function ResInicio({ condominioId, unidad, ir }: { condominioId: string; 
   return (
     <div>
       <div style={{ marginBottom: 18 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 600 }}>Hola</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 600 }}>
+          Hola{nombreResidente ? `, ${nombreResidente}` : ''}
+        </h1>
         <p className="wg-page-sub">Tienes {proximas.length} {proximas.length === 1 ? 'visita prevista' : 'visitas previstas'} para hoy y mañana.</p>
       </div>
 
@@ -65,7 +92,6 @@ export function ResInicio({ condominioId, unidad, ir }: { condominioId: string; 
 
       <div className="wg-section-label" style={{ marginTop: 0 }}>Novedades</div>
       
-      {/* Novedad real: si hay visitas, muestra la última */}
       {proximas.length > 0 ? (
         <button type="button" className="wg-list-card" style={{ width: '100%', textAlign: 'left', color: 'inherit', cursor: 'pointer', fontFamily: 'inherit' }} onClick={() => ir('visitas')}>
           <div className="wg-feed-icon t-ok"><Bell size={17} /></div>

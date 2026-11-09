@@ -31,13 +31,12 @@ export function ModuloLugares({ condominioId }: { condominioId: string }) {
   
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormLugar>();
 
-  // Usamos 'any' en los renders para acceder a los campos que agregamos en services
   const columnas: Columna<LugarCondominio>[] = [
-    { clave: 'nombre', titulo: 'Lugar', ordenable: true, render: (l: any) => <span className="wg-cell-main">{l.nombre}</span> },
-    { clave: 'tipo', titulo: 'Tipo', ordenable: true, render: (l: any) => <Badge texto={l.tipo} tono="info" punto={false} /> },
-    { clave: 'descripcion', titulo: 'Descripción', render: (l: any) => l.descripcion || '-' },
-    { clave: 'horario', titulo: 'Horario', render: (l: any) => <span className="wg-mono">{l.horario || 'Sin horario'}</span> },
-  ];
+  { clave: 'nombre', titulo: 'Lugar', ordenable: true, render: (l) => <span className="wg-cell-main">{l.nombre}</span> },
+  { clave: 'tipo', titulo: 'Tipo', ordenable: true, render: (l) => <Badge texto={l.tipo} tono="info" punto={false} /> },
+ { clave: 'descripcion', titulo: 'Descripción', render: (l) => (l as LugarCondominio & { descripcion?: string }).descripcion || '-' },
+ { clave: 'horario', titulo: 'Horario', render: (l) => <span className="wg-mono">{(l as LugarCondominio & { horario?: string }).horario || 'Sin horario'}</span> },
+];
 
   const guardar = handleSubmit(async (data) => {
     setGuardando(true);

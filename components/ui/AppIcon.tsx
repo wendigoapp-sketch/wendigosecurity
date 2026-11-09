@@ -1,4 +1,4 @@
-'use client';
+ 'use client';
 
 import React from 'react';
 import * as HeroIcons from '@heroicons/react/24/outline';
@@ -7,14 +7,17 @@ import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 
 type IconVariant = 'outline' | 'solid';
 
+type HeroIconComponent = React.ComponentType<
+    React.ComponentProps<typeof QuestionMarkCircleIcon>
+>;
+
 interface IconProps {
-    name: string; // Changed to string to accept dynamic values
+    name: string;
     variant?: IconVariant;
     size?: number;
     className?: string;
     onClick?: () => void;
     disabled?: boolean;
-    [key: string]: any;
 }
 
 function Icon({
@@ -24,19 +27,30 @@ function Icon({
     className = '',
     onClick,
     disabled = false,
-    ...props
 }: IconProps) {
     const iconSet = variant === 'solid' ? HeroIconsSolid : HeroIcons;
-    const IconComponent = iconSet[name as keyof typeof iconSet] as React.ComponentType<any>;
+
+    const IconComponent = iconSet[
+        name as keyof typeof iconSet
+    ] as HeroIconComponent | undefined;
+
+    const iconClassName = `${
+        disabled
+            ? 'opacity-50 cursor-not-allowed'
+            : onClick
+                ? 'cursor-pointer hover:opacity-80'
+                : ''
+    } ${className}`;
+
+    const handleClick = disabled ? undefined : onClick;
 
     if (!IconComponent) {
         return (
             <QuestionMarkCircleIcon
                 width={size}
                 height={size}
-                className={`text-gray-400 ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-                onClick={disabled ? undefined : onClick}
-                {...props}
+                className={`text-gray-400 ${iconClassName}`}
+                onClick={handleClick}
             />
         );
     }
@@ -45,11 +59,10 @@ function Icon({
         <IconComponent
             width={size}
             height={size}
-            className={`${disabled ? 'opacity-50 cursor-not-allowed' : onClick ? 'cursor-pointer hover:opacity-80' : ''} ${className}`}
-            onClick={disabled ? undefined : onClick}
-            {...props}
+            className={iconClassName}
+            onClick={handleClick}
         />
     );
 }
 
-export default Icon; 
+export default Icon;

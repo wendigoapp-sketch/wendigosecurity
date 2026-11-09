@@ -1,14 +1,18 @@
+
 'use client';
+
 import React, { useState, useEffect } from 'react';
 import {
   Building2, Camera, CarFront, ClipboardList, ScrollText, LayoutDashboard, MapPin, MessageSquare, QrCode,
   Route, ShieldAlert, ShieldCheck, Users, CalendarClock, CalendarDays, UsersRound,
 } from 'lucide-react';
+
 import { AppLayout } from '../layout/AppLayout';
 import type { GrupoNav } from '../layout/Sidebar';
 import { servicios } from '../../lib/services';
 import { useServicio } from '../../lib/hooks/useServicio';
 import type { Condominio } from '../../lib/types';
+
 import { ModuloResumen } from './ModuloResumen';
 import { ModuloCondominios } from './ModuloCondominios';
 import { ModuloResidentes } from './ModuloResidentes';
@@ -26,44 +30,98 @@ import { ModuloComunicacion } from './ModuloComunicacion';
 import { ModuloAuditoria } from './ModuloAuditoria';
 import { EmptyState } from '../ui/EmptyState';
 
+// CORRECCIÓN: importamos createClient, que sí existe en supabase.ts
+import { createClient } from '../../lib/config/supabase';
+
 export function PanelAdministrador() {
   const [modulo, setModulo] = useState('resumen');
-  const [condominioId, setCondominioId] = useState(''); 
-  
-  const condos = useServicio<Condominio[]>(() => servicios.condominios(), [], []);
-  
-  // Consultamos datos solo si hay un condominioId válido
-  const panicos = useServicio(() => condominioId ? servicios.alertasPanico(condominioId) : Promise.resolve([]), [], [condominioId]);
-  const incidencias = useServicio(() => condominioId ? servicios.incidencias(condominioId) : Promise.resolve([]), [], [condominioId]);
+  const [condominioId, setCondominioId] = useState('');
+  const [usuarioReal, setUsuarioReal] = useState({
+    nombre: 'Admin',
+    rol: 'Administrador'
+  });
 
-  // EFECTO PARA CARGAR EL CONDOMINIO CON LOCALSTORAGE
+  const condos = useServicio<Condominio[]>(
+    () => servicios.condominios(),
+    [],
+    []
+  );
+
+  const panicos = useServicio(
+    () => condominioId
+      ? servicios.alertasPanico(condominioId)
+      : Promise.resolve([]),
+    [],
+    [condominioId]
+  );
+
+  const incidencias = useServicio(
+    () => condominioId
+      ? servicios.incidencias(condominioId)
+      : Promise.resolve([]),
+    [],
+    [condominioId]
+  );
+
+  // EFECTO PARA TRAER EL USUARIO REAL DE SUPABASE
   useEffect(() => {
-    const cargarCondominio = async () => {
-      // 1. Primero, chequeamos la "libretita" del navegador
+    const traerUsuario = async () => {
+      try {
+        const supabase = createClient();
+
+        const { data, error } = await supabase.auth.getUser();
+
+        if (error) throw error;
+
+        if (data?.user) {
+          setUsuarioReal({
+            nombre: data.user.email?.split('@')[0] || 'Admin',
+            rol: 'Administrador'
+          });
+        }
+      } catch (err) {
+        console.error('Error trayendo usuario:', err);
+      }
+    };
+
+    traerUsuario();
+  }, []);
+
+  // EFECTO PARA CARGAR EL CONDOMINIO
+  useEffect(() => {
+    const cargarCondominio = () => {
       const condoGuardado = localStorage.getItem('condominioActivo');
-      
-      if (condoGuardado && condos.datos.find(c => c.id === condoGuardado)) {
+
+      if (
+        condoGuardado &&
+        condos.datos.find(c => c.id === condoGuardado)
+      ) {
         setCondominioId(condoGuardado);
         return;
       }
 
-      // 2. Si no hay nada en la libretita, usamos el primero de la lista
       if (condos.datos.length > 0) {
         setCondominioId(condos.datos[0].id);
       } else {
-        // 3. Si no hay ningún condominio, lo mandamos directo a crearlos
         setModulo('condominios');
       }
     };
-    
-    // Solo ejecutamos si hay datos cargados
-    if (condos.datos.length > 0 || (!condos.cargando && condominioId === '')) {
+
+    if (
+      condos.datos.length > 0 ||
+      (!condos.cargando && condominioId === '')
+    ) {
       cargarCondominio();
     }
-  }, [condos.datos, condos.cargando]); // Se ejecuta cuando la lista de condominios cambia o termina de cargar
+  }, [condos.datos, condos.cargando]);
 
-  const activas = panicos.datos.filter((p) => (p.estado || '').toLowerCase() === 'activa').length;
-  const abiertas = incidencias.datos.filter((i) => (i.estado || '').toLowerCase() === 'abierta').length;
+  const activas = panicos.datos.filter(
+    (p) => (p.estado || '').toLowerCase() === 'activa'
+  ).length;
+
+  const abiertas = incidencias.datos.filter(
+    (i) => (i.estado || '').toLowerCase() === 'abierta'
+  ).length;
 
   const grupos: GrupoNav[] = [
     {
@@ -104,29 +162,79 @@ export function PanelAdministrador() {
   ];
 
   const render = () => {
-    // Si no hay condominio y quiere ver otro módulo, mostramos mensaje (excepto en condominios)
     if (!condominioId && modulo !== 'condominios') {
-        return <div className="wg-card"><EmptyState icono={Building2} titulo="Sin condominio seleccionado" descripcion="Ve a la sección de Condominios para crear uno o selecciona uno existente." /></div>;
+      return (
+        <div className="wg-card">
+          <EmptyState
+            icono={Building2}
+            titulo="Sin condominio seleccionado"
+            descripcion="Ve a la sección de Condominios para crear uno o selecciona uno existente."
+          />
+        </div>
+      );
     }
 
     switch (modulo) {
-      case 'resumen': return <ModuloResumen condominioId={condominioId} onModulo={setModulo} />;
-      case 'condominios': return <ModuloCondominios condominios={condos.datos} onRefrescar={condos.recargar} />;
-      case 'residentes': return <ModuloResidentes condominioId={condominioId} />;
-      case 'guardias': return <ModuloGuardias condominioId={condominioId} />;
-      case 'visitas': return <ModuloVisitas condominioId={condominioId} />;
-      case 'qr': return <ModuloQR condominioId={condominioId} />;
-      case 'movimientos': return <ModuloMovimientos condominioId={condominioId} />;
-      case 'vehiculos': return <ModuloVehiculos condominioId={condominioId} />;
-      case 'incidencias': return <ModuloIncidencias condominioId={condominioId} />;
-      case 'panico': return <ModuloPanico condominioId={condominioId} />;
-      case 'turnos': return <ModuloTurnos condominioId={condominioId} />;
-      case 'lugares': return <ModuloLugares condominioId={condominioId} />;
-      case 'camaras': return <ModuloCamaras condominioId={condominioId} />;
-      case 'comunicacion': return <ModuloComunicacion condominioId={condominioId} />;
-      case 'auditoria': return <ModuloAuditoria condominioId={condominioId} />;
+      case 'resumen':
+        return <ModuloResumen condominioId={condominioId} onModulo={setModulo} />;
+
+      case 'condominios':
+        return (
+          <ModuloCondominios
+            condominios={condos.datos}
+            onRefrescar={condos.recargar}
+          />
+        );
+
+      case 'residentes':
+        return <ModuloResidentes condominioId={condominioId} />;
+
+      case 'guardias':
+        return <ModuloGuardias condominioId={condominioId} />;
+
+      case 'visitas':
+        return <ModuloVisitas condominioId={condominioId} />;
+
+      case 'qr':
+        return <ModuloQR condominioId={condominioId} />;
+
+      case 'movimientos':
+        return <ModuloMovimientos condominioId={condominioId} />;
+
+      case 'vehiculos':
+        return <ModuloVehiculos condominioId={condominioId} />;
+
+      case 'incidencias':
+        return <ModuloIncidencias condominioId={condominioId} />;
+
+      case 'panico':
+        return <ModuloPanico condominioId={condominioId} />;
+
+      case 'turnos':
+        return <ModuloTurnos condominioId={condominioId} />;
+
+      case 'lugares':
+        return <ModuloLugares condominioId={condominioId} />;
+
+      case 'camaras':
+        return <ModuloCamaras condominioId={condominioId} />;
+
+      case 'comunicacion':
+        return <ModuloComunicacion condominioId={condominioId} />;
+
+      case 'auditoria':
+        return <ModuloAuditoria condominioId={condominioId} />;
+
       default:
-        return <div className="wg-card"><EmptyState icono={UsersRound} titulo="Módulo no disponible" descripcion="Este módulo todavía no está habilitado en el panel." /></div>;
+        return (
+          <div className="wg-card">
+            <EmptyState
+              icono={UsersRound}
+              titulo="Módulo no disponible"
+              descripcion="Este módulo todavía no está habilitado en el panel."
+            />
+          </div>
+        );
     }
   };
 
@@ -137,15 +245,16 @@ export function PanelAdministrador() {
       onModulo={setModulo}
       condominios={condos.datos}
       condominioId={condominioId}
-      // GUARDAMOS EN LA LIBRETITA CADA VEZ QUE EL USUARIO CAMBIA DE CONDOMINIO
       onCondominio={(id) => {
         setCondominioId(id);
         localStorage.setItem('condominioActivo', id);
       }}
-      usuario={{ nombre: 'Marcela Opazo', rol: 'Administrador' }}
+      usuario={usuarioReal}
       alertasActivas={activas}
     >
-      <div key={`${modulo}-${condominioId}`}>{render()}</div>
+      <div key={`${modulo}-${condominioId}`}>
+        {render()}
+      </div>
     </AppLayout>
   );
 }
