@@ -419,29 +419,43 @@ async eliminarGuardia(id: string, usuarioId: string, condominioId: string): Prom
 },
 
 
-  // --- PUESTOS ---
-  async puestos(c: string): Promise<Puesto[]> {
+    async puestos(c: string): Promise<Puesto[]> {
     const supabase = createClient();
 
-    const { data } = await supabase.from('puestos').select('*').eq('condominio_id', c);
+    // 1. Traemos los puestos del condominio
+    const { data: puestosData } = await supabase
+      .from('puestos')
+      .select('*')
+      .eq('condominio_id', c);
 
-    const { count: guardiasEnTurno } = await supabase
+    // 2. Traemos los guardias que están EN TURNO
+    const { data: guardiasData } = await supabase
       .from('guardias')
-      .select('*', { count: 'exact', head: true })
+      .select('id, usuario_id')
       .eq('condominio_id', c)
       .eq('en_turno', true);
 
-    return (data || []).map(p => ({
-      id: p.id,
-      condominioId: p.condominio_id,
-      nombre: p.nombre,
-      tipo: p.descripcion || 'Portería',
-      requeridos: 1,
-      cubiertos: guardiasEnTurno || 0,
-      foto_guardia_actual: p.foto_guardia_actual || null,
-      nombre_guardia_actual: p.nombre_guardia_actual || null,
-      hora_relevo: p.hora_relevo || null
-    }));
+    const totalGuardiasEnTurno = guardiasData?.length || 0;
+
+    // 3. Armamos la lista de puestos asignando los guardias de a uno
+    return (puestosData || []).map((p, index) => {
+      // Si hay más guardias que puestos, el primer puesto se queda con el primero, etc.
+      // Si hay menos guardias que puestos, algunos puestos quedan en 0.
+      const guardiaAsignado = guardiasData?.[index]; 
+      const estaCubierto = guardiaAsignado ? 1 : 0;
+
+      return {
+        id: p.id,
+        condominioId: p.condominio_id,
+        nombre: p.nombre,
+        tipo: p.descripcion || 'Portería',
+        requeridos: 1, // Cada puesto requiere 1 guardia
+        cubiertos: estaCubierto, // <-- Ahora es 1 o 0 por puesto
+        foto_guardia_actual: p.foto_guardia_actual || null,
+        nombre_guardia_actual: p.nombre_guardia_actual || null,
+        hora_relevo: p.hora_relevo || null
+      };
+    });
   },
 
   async crearPuesto(c: string, nombre: string, tipo: string): Promise<void> {
