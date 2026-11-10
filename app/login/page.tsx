@@ -1,15 +1,11 @@
-
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { createClient } from '../../lib/config/supabase';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -33,6 +29,7 @@ export default function LoginPage() {
 
       if (authError) {
         setError(authError.message);
+        setLoading(false);
         return;
       }
 
@@ -48,6 +45,7 @@ export default function LoginPage() {
 
       if (errorEmpresa) {
         setError('Error al consultar empresa: ' + errorEmpresa.message);
+        setLoading(false);
         return;
       }
 
@@ -61,7 +59,7 @@ export default function LoginPage() {
 
       // 3. Si es administrador, entra al panel administrativo
       if (rolesEmpresa.includes('admin')) {
-        router.replace('/panel-administrador');
+        window.location.href = '/panel-administrador'; // <-- FORZA RECARGA
         return;
       }
 
@@ -75,6 +73,7 @@ export default function LoginPage() {
 
       if (errorMembresia) {
         setError('Error al consultar membresías: ' + errorMembresia.message);
+        setLoading(false);
         return;
       }
 
@@ -88,7 +87,9 @@ export default function LoginPage() {
 
       // 5. Verificamos que tenga una membresía válida
       if (rolesCondominio.length === 0) {
+        await supabase.auth.signOut();
         setError('No se encontró una membresía activa para este usuario.');
+        setLoading(false);
         return;
       }
 
@@ -97,24 +98,25 @@ export default function LoginPage() {
         setError(
           'Este usuario tiene varios roles asignados. Contactá al administrador.'
         );
+        setLoading(false);
         return;
       }
 
       const rol = rolesCondominio[0];
 
-      // 7. Redirigimos según el rol
+      // 7. Redirigimos según el rol (RECARGA COMPLETA)
       if (rol === 'guardia') {
-        router.replace('/panel-guardia');
+        window.location.href = '/panel-guardia'; 
       } else if (rol === 'residente') {
-        router.replace('/panel-residente');
+        window.location.href = '/panel-residente';
       } else {
         setError('Rol no reconocido: ' + rol);
+        setLoading(false);
       }
 
     } catch (err) {
       console.error('Error en el inicio de sesión:', err);
       setError('Ocurrió un error inesperado al iniciar sesión.');
-    } finally {
       setLoading(false);
     }
   };
