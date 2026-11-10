@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  // 3. CANDADO: Si intenta entrar al panel de admin, verificamos que sea admin
+  // 3. CANDADO: Panel de administrador
   if (user && url.startsWith('/panel-administrador')) {
     const { data } = await supabase
       .from('empresa_membresias')
@@ -48,12 +48,11 @@ export async function middleware(request: NextRequest) {
       .limit(1);
 
     if (!data || data.length === 0) {
-      // Si no es admin, lo mandamos a su panel de guardia
       return NextResponse.redirect(new URL('/panel-guardia', request.url));
     }
   }
 
-  // 4. CANDADO: Si intenta entrar al panel de guardia, verificamos que sea guardia
+  // 4. CANDADO: Panel de guardia
   if (user && url.startsWith('/panel-guardia')) {
     const { data } = await supabase
       .from('membresias')
@@ -63,8 +62,22 @@ export async function middleware(request: NextRequest) {
       .limit(1);
 
     if (!data || data.length === 0) {
-      // Si no es guardia, al login
       return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  // 5. CANDADO: Panel de residente (El que faltaba para que Matías no entre)
+  if (user && url.startsWith('/panel-residente')) {
+    const { data } = await supabase
+      .from('membresias')
+      .select('rol')
+      .eq('usuario_id', user.id)
+      .eq('rol', 'residente')
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      // Si no es residente, lo mandamos a su panel de guardia
+      return NextResponse.redirect(new URL('/panel-guardia', request.url));
     }
   }
 
