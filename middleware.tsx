@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export const runtime = 'nodejs'; // <-- LÍNEA MÁGICA AGREGADA
+export const runtime = 'nodejs';
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -26,15 +26,46 @@ export async function middleware(request: NextRequest) {
   );
 
   const { data: { user } } = await supabase.auth.getUser();
+  const url = request.nextUrl.pathname;
 
-  // Si no hay usuario y quiere entrar a un panel, lo mandamos al login
-  if (!user && request.nextUrl.pathname.startsWith('/panel-')) {
+  // 1. Si no hay usuario y quiere entrar a un panel, al login
+  if (!user && url.startsWith('/panel-')) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Si ya está logueado y quiere ir al login, lo mandamos a la landing
-  if (user && request.nextUrl.pathname === '/login') {
+  // 2. Si está logueado y quiere ir al login, a la home
+  if (user && url === '/login') {
     return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // 3. CANDADO: Si intenta entrar al panel de admin, verificamos que sea admin
+  if (user && url.startsWith('/panel-administrador')) {
+    const { data } = await supabase
+      .from('empresa_membresias')
+      .select('rol')
+      .eq('usuario_id', user.id)
+      .eq('rol', 'admin')
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      // Si no es admin, lo mandamos a su panel de guardia
+      return NextResponse.redirect(new URL('/panel-guardia', request.url));
+    }
+  }
+
+  // 4. CANDADO: Si intenta entrar al panel de guardia, verificamos que sea guardia
+  if (user && url.startsWith('/panel-guardia')) {
+    const { data } = await supabase
+      .from('membresias')
+      .select('rol')
+      .eq('usuario_id', user.id)
+      .eq('rol', 'guardia')
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      // Si no es guardia, al login
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   return supabaseResponse;
